@@ -475,6 +475,18 @@ impl I3Connection {
             config: cfg.to_owned(),
         })
     }
+
+    /// Returns the last loaded i3 config.
+    #[cfg(feature = "i3-4-14")]
+    #[cfg_attr(feature = "dox", doc(cfg(feature = "i3-4-14")))]
+    pub fn get_variable_replaced_config(&mut self) -> Result<reply::Config, MessageError> {
+        let j: json::Value = self.stream.send_receive_i3_message(9, "")?;
+        let configs = j.get("included_configs").unwrap().as_array();
+        let cfg = configs.unwrap().get(0).unwrap().get("variable_replaced_contents").unwrap().as_str().unwrap();
+        Ok(reply::Config {
+            config: cfg.to_owned(),
+        })
+    }
 }
 
 #[cfg(test)]
@@ -578,6 +590,12 @@ mod test {
     #[test]
     fn get_config() {
         I3Connection::connect().unwrap().get_config().unwrap();
+    }
+
+    #[cfg(feature = "i3-4-14")]
+    #[test]
+    fn get_variable_replaced_config() {
+        I3Connection::connect().unwrap().get_variable_replaced_config().unwrap();
     }
 
     #[test]
